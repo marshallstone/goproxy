@@ -1,13 +1,14 @@
-package goproxy
+package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 )
 
 func main() {
-
+	fmt.Println("proxy client")
 }
 
 func connect(addr string) (*bufio.ReadWriter, error) {

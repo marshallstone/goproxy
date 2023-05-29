@@ -1,1 +1,7 @@
-package goproxy
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("proxy server")
+}
