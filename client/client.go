@@ -5,10 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 )
 
+type client_msg struct {
+	domain  string
+	request string
+}
+
 func main() {
-	fmt.Println("proxy client")
+	args := os.Args
+	if len(args) != 2 {
+		fmt.Println("usage: client.go proxy-addr:proxy-port")
+	}
+	msg := client_msg{domain: "https://google.com/", request: "GET "}
 }
 
 func connect(addr string) (*bufio.ReadWriter, error) {
