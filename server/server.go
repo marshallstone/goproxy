@@ -1,17 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
-)
 
-type client_msg struct {
-	domain  string
-	request string
-}
+	lib "github.com/marshallstone/goproxy/lib"
+)
 
 func main() {
 	arguments := os.Args
@@ -27,24 +23,18 @@ func main() {
 		return
 	}
 
-	conn, err := listener.Accept()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	for {
-		var msg client_msg
-		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-		dec := gob.NewDecoder(rw)
-		err := dec.Decode(&msg)
+		conn, err := listener.Accept()
+		var msg lib.RequestMessage
+		dec := gob.NewDecoder(conn)
+		err = dec.Decode(&msg)
 
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		data := fmt.Sprintf("Received msg: {domain: %s, request: %s}", msg.domain, msg.request)
-		conn.Write([]byte(data))
+		data := fmt.Sprintf("Received msg: {domain: %s, request: %s}", msg.Domain, msg.Request)
+		fmt.Printf(data)
 	}
 }
