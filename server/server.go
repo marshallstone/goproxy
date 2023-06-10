@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"log"
 	"net"
@@ -18,10 +17,8 @@ func main() {
 	}
 	PORT := "127.0.0.1:" + arguments[1]
 	listener, err := net.Listen("tcp", PORT)
-
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	for {
@@ -29,16 +26,20 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		var msg lib.RequestMessage
-		dec := gob.NewDecoder(conn)
-		err = dec.Decode(&msg)
 
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		go handleRequest(conn)
+	}
+}
 
-		data := fmt.Sprintf("Received msg: {domain: %s, request: %s}", msg.Domain, msg.Request)
-		fmt.Printf(data)
+func handleRequest(conn net.Conn) {
+	var msg lib.InitPacket
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if n == 3 {
+		fmt.Printf("version: %d\n# auth methods supported: %d\nauth method: %d\n", buf[0], buf[1], buf[2])
 	}
 }
