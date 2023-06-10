@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
+	"log"
 	"net"
 	"os"
 
@@ -25,6 +26,9 @@ func main() {
 
 	for {
 		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatal(err)
+		}
 		var msg lib.RequestMessage
 		dec := gob.NewDecoder(conn)
 		err = dec.Decode(&msg)
