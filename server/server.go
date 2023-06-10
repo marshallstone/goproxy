@@ -2,10 +2,16 @@ package main
 
 import (
 	"bufio"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
 )
+
+type client_msg struct {
+	domain  string
+	request string
+}
 
 func main() {
 	arguments := os.Args
@@ -28,11 +34,17 @@ func main() {
 	}
 
 	for {
-		netData, err := bufio.NewReader(conn).ReadString('\n')
+		var msg client_msg
+		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+		dec := gob.NewDecoder(rw)
+		err := dec.Decode(&msg)
+
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		conn.Write([]byte("Received: " + netData))
+
+		data := fmt.Sprintf("Received msg: {domain: %s, request: %s}", msg.domain, msg.request)
+		conn.Write([]byte(data))
 	}
 }
