@@ -1,7 +1,12 @@
 package session
 
-type InitPacket struct {
-	Version    byte
-	Auth       byte
-	AuthMethod byte
+type ServerMethod struct {
+	Version byte
+	Auth    byte
+	Method  byte
+}
+
+type ClientMethod struct {
+	Version byte
+	Method  byte
 }
