@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/gob"
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
 	"net"
@@ -17,19 +18,25 @@ func main() {
 	}
 
 	// Create request
-	msg := lib.RequestMessage{Domain: "https://google.com/", Request: "GET"}
+	msg := lib.ServerMethod{Version: 0x5, Auth: 1, Method: 0}
 
 	// Connect to proxy server, create rw
 	conn, err := net.Dial("tcp", args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	enc := gob.NewEncoder(conn)
-	// Send a single message over TCP by writing msg to the encoder
-	err = enc.Encode(msg)
+	buf := new(bytes.Buffer)
+	err = binary.Write(buf, binary.BigEndian, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
+	n, err := conn.Write(buf.Bytes())
+	fmt.Printf("%d bytes written to server\n", n)
+	if err != nil {
+		log.Fatal(err)
+	}
+	n, err = conn.Read(buf.Bytes())
+	fmt.Printf("%d bytes read from server\n", n)
+
 	conn.Close()
 }
