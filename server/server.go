@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	lib "github.com/marshallstone/goproxy/lib"
@@ -66,10 +67,33 @@ func handleRequest(conn net.Conn) {
 		} else {
 			// Handle requests next
 			// Form TCP connection to forward requests
-			fmt.Printf("%d bytes read\n", n)
-			if err != nil {
-				log.Fatal(err)
-			}
+			processRequest(buf, n)
 		}
 	}
+}
+
+func processRequest(buf []byte, n int) {
+	fmt.Printf("%d bytes read\n", n)
+	fmt.Printf("ver: %d\ncmd: %d\nrsv: %d\natyp: %d\n", buf[0], buf[1], buf[2], buf[3])
+	addr := buf[4 : n-2]
+	fmt.Printf("addr: %s\n", addr)
+	fmt.Printf("port: %d\n", buf[n-2:n])
+
+	// Listen and serve on 8080 as a http server
+
+	http.HandleFunc("/", requestHandler)
+	log.Fatal(http.ListenAndServe(":8000", nil))
+
+	// Response to bind to port 8080
+	var port uint16 = 8080
+	portBuf := make([]byte, 2)
+	binary.BigEndian.PutUint16(portBuf, port)
+
+	bndAddr := net.ParseIP("127.0.0.1")
+	reply := lib.Reply{Version: 0x5, Rep: 0x0, RSV: 0x00, Atyp: 0x01, BndAddr: net.IP.To4(bndAddr), BndPort: portBuf}
+	fmt.Print(reply)
+}
+
+func requestHandler(w http.ResponseWriter, _ *http.Request) {
+	fmt.Printf("request received!\n")
 }
