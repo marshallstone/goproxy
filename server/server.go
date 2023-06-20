@@ -30,11 +30,11 @@ func main() {
 			log.Fatal(err)
 		}
 
-		go handleRequest(conn)
+		go handleGreeting(conn)
 	}
 }
 
-func handleRequest(conn net.Conn) {
+func handleGreeting(conn net.Conn) {
 	// Use the same buffer for read/write operations?
 	buf := make([]byte, 1024)
 
@@ -66,7 +66,7 @@ func handleRequest(conn net.Conn) {
 			}
 		} else {
 			// Handle requests next
-			// Form TCP connection to forward requests
+			// Connection between proxy client/server established at this point
 			processRequest(buf, n)
 		}
 	}
