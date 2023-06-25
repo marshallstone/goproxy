@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"os"
 
 	lib "github.com/marshallstone/goproxy/lib"
@@ -24,14 +23,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		go handleGreeting(conn)
+	conn, err := listener.Accept()
+	if err != nil {
+		log.Fatal(err)
 	}
+	handleGreeting(conn)
 }
 
 func handleGreeting(conn net.Conn) {
@@ -72,28 +68,40 @@ func handleGreeting(conn net.Conn) {
 	}
 }
 
+// func requestHandler(w http.ResponseWriter, _ *http.Request) {
+// 	fmt.Printf("request received!\n")
+// }
+
 func processRequest(buf []byte, n int) {
-	fmt.Printf("%d bytes read\n", n)
-	fmt.Printf("ver: %d\ncmd: %d\nrsv: %d\natyp: %d\n", buf[0], buf[1], buf[2], buf[3])
 	addr := buf[4 : n-2]
-	fmt.Printf("addr: %s\n", addr)
-	fmt.Printf("port: %d\n", buf[n-2:n])
+	port := binary.BigEndian.Uint16(buf[n-2 : n])
+
+	//  Connect to requested site
+	fmt.Printf("Attempting to connect to: %s\n", string(addr)+":"+fmt.Sprint(port))
+	serverConn, err := net.Dial("tcp", string(addr)+":"+fmt.Sprint(port))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("successfully connected to: %s, on port %d\n", addr, port)
+	err = serverConn.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Listen and serve on 8080 as a http server
-
-	http.HandleFunc("/", requestHandler)
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	//go setupServer()
 
 	// Response to bind to port 8080
-	var port uint16 = 8080
-	portBuf := make([]byte, 2)
-	binary.BigEndian.PutUint16(portBuf, port)
+	// var port uint16 = 8080
+	// portBuf := make([]byte, 2)
+	// binary.BigEndian.PutUint16(portBuf, port)
 
-	bndAddr := net.ParseIP("127.0.0.1")
-	reply := lib.Reply{Version: 0x5, Rep: 0x0, RSV: 0x00, Atyp: 0x01, BndAddr: net.IP.To4(bndAddr), BndPort: portBuf}
-	fmt.Print(reply)
+	// bndAddr := net.ParseIP("127.0.0.1")
+	// reply := lib.Reply{Version: 0x5, Rep: 0x0, RSV: 0x00, Atyp: 0x01, BndAddr: net.IP.To4(bndAddr), BndPort: portBuf}
+	// fmt.Print(reply)
 }
 
-func requestHandler(w http.ResponseWriter, _ *http.Request) {
-	fmt.Printf("request received!\n")
-}
+// func setupServer() {
+// 	http.HandleFunc("/", requestHandler)
+// 	log.Fatal(http.ListenAndServe(":8000", nil))
+// }
